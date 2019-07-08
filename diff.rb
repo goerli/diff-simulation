@@ -24,20 +24,24 @@ require "colorize"
 ## Stats, do not change
 @NUM_REORG   = 0
 
+# block hash is 6 random bytes
 def block_hash
   SecureRandom.hex[0..11]
 end
 
+# peer identity is 4 random bytes
 def peer_hash
   SecureRandom.hex[0..7]
 end
 
+# prepent logs with timestamp
 def log(string)
   if @DEBUG_MODE
     printf "#{Time.now.utc.strftime('%Y-%m-%d %H:%M:%S')} #{string}\n"
   end
 end
 
+# seal an out-of-turn block
 def seal_block_out_of_turn(num, diff, par)
   _num = num + 1
   _diff = diff + @DIFF_NOTURN
@@ -50,6 +54,7 @@ def seal_block_out_of_turn(num, diff, par)
   }
 end
 
+# seal an in-turn block
 def seal_block_in_turn(num, diff, par)
   _num = num + 1
   _diff = diff + @DIFF_INTURN
@@ -62,6 +67,7 @@ def seal_block_in_turn(num, diff, par)
   }
 end
 
+# use this genesis to run the chains
 def seal_genesis
   genesis = {
       "number" => 0,
@@ -71,6 +77,7 @@ def seal_genesis
     }
 end
 
+# spawn random validator nodes with same genesis
 def spawn_peers(gen)
   peers = []
   (1..@PEER_COUNT).each do
@@ -79,8 +86,10 @@ def spawn_peers(gen)
   peers
 end
 
+# mine a single chain starting at genesis with a number of peers
 def mine_chain(gen, peers)
 
+  # genesis is best block now
   best = gen
   log "[SIML] Genesis block #{gen['number']}, diff #{gen['difficulty']}, hash #{gen['hash']}".colorize(:green)
 
@@ -122,38 +131,51 @@ def mine_chain(gen, peers)
       _current += 1
     end
 
-    # simulate "networking" assuming each peer sees all blocks
-    peers.each do |peer|
-      peers.each do |block|
+    # simulate "n-to-m-networking" assuming each peer sees all blocks
+    peers.each do |p|
+      peers.each do |q|
 
         # assume network fragmentation (a % chance to miss blocks)
         if rand() > @NET_FRAG
+
           # if their total diff is higher, re-organize to their chain
-          if peer[0]['best']['difficulty'] < block[0]['best']['difficulty']
-            log "[NETW] Peer #{peer[0]['id']} (head #{peer[0]['best']['hash']}) reorg to #{block[0]['best']['hash']} (#{block[0]['best']['difficulty']}) from peer #{block[0]['id']}".colorize(:yellow)
-            peer[0]['best'] = block[0]['best']
+          if p[0]['best']['difficulty'] < q[0]['best']['difficulty']
+            log "[NETW] Peer #{p[0]['id']} (head #{p[0]['best']['hash']}) reorg to #{q[0]['best']['hash']} (#{q[0]['best']['difficulty']}) from peer #{q[0]['id']}".colorize(:yellow)
+            p[0]['best'] = q[0]['best']
+
+            # count reorgs
             @NUM_REORG += 1
 
           # if their total diff is the same, print a red warning and keep own block, ideally this should not happen much
-          elsif peer[0]['best']['difficulty'] === block[0]['best']['difficulty']
+          elsif p[0]['best']['difficulty'] === q[0]['best']['difficulty']
+
             # doing nothing but staying on wrong block
-            # log "[DEBG] Peer #{peer[0]['id']} (head #{peer[0]['best']['hash']}) SAME DIFFICULTY as #{block[0]['best']['hash']} (#{block[0]['best']['difficulty']}); keeping own best block".colorize(:gray)
+            # log "[DEBG] Peer #{p[0]['id']} (head #{p[0]['best']['hash']}) SAME DIFFICULTY as #{q[0]['best']['hash']} (#{q[0]['best']['difficulty']}); keeping own best block".colorize(:gray)
           else
-            # already on best head
-            # log "[DEBG] Peer #{peer[0]['id']} (head #{peer[0]['best']['hash']}) idles".colorize(:gray)
+
+            # already on best head, do nothing
+            # log "[DEBG] Peer #{p[0]['id']} (head #{p[0]['best']['hash']}) idles".colorize(:gray)
           end
         end
       end
     end
 
 
-    # is the network stuck?
+    # check: is the network stuck?
     _stuck = false
     peers.each do |p|
       peers.each do |q|
+
+      	# condition 1: same difficulty
         if p[0]['best']['difficulty'] === q[0]['best']['difficulty']
+
+        	# condition 2: different hash
           if p[0]['best']['hash'].to_i(16) != q[0]['best']['hash'].to_i(16)
+
+          	# condition 3: same diff as best in-turn block
             if p[0]['best']['difficulty'] === _diff
+
+            	# network is unable to reorg if all conditions are met
               _stuck = true
             end
           end
@@ -161,12 +183,15 @@ def mine_chain(gen, peers)
       end
     end
 
+    # print stats about peers and best blocks if stuck
     if _stuck
       log "[SIML] Network is stuck:".colorize(:light_red)
       peers.each do |peer|
         log "[SIML] Peer #{peer[0]['id']}, block #{peer[0]['best']['number']}, diff #{peer[0]['best']['difficulty']}, hash #{peer[0]['best']['hash']}, parent #{peer[0]['best']['parent']}".colorize(:light_red)
       end
       log "[SIML] Network is stuck... Exiting.".colorize(:light_red)
+
+      # exit simulation at block hight #{_num}
       return _num
     end
 
@@ -175,10 +200,11 @@ def mine_chain(gen, peers)
     @PEER_INTURN = (@PEER_INTURN + 1) % @PEER_COUNT
   end
 
+  # finish simulation at block hight #{_num}
   return _num
 end
 
-# Sorry for overriding this here, lol
+# Sorry for overriding this here, lol - used for convenience in the bash script
 if ARGV.length === 3
   @DIFF_INTURN = ARGV[0].to_i
   @DIFF_NOTURN = ARGV[1].to_i
@@ -188,6 +214,7 @@ elsif ARGV.length >= 4
   @DEBUG_MODE = ARGV[4].to_s.downcase == "true"
 end
 
+# script starts here, seal genesis and spawn peers; "mine" chain
 genesis = seal_genesis
 network = spawn_peers(genesis)
 block = mine_chain(genesis, network)
