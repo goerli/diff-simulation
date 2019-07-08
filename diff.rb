@@ -114,7 +114,7 @@ def mine_chain(gen, peers)
           )
         _diff = _best['difficulty']
         _num = _best['number']
-        log "[SEAL] Peer #{peer[0]['id']} (head #{peer[0]['best']['hash']}) sealed INTURN block #{_best['number']}, diff #{_best['difficulty']}, hash #{_best['hash']}, parent #{_best['parent']}".colorize(:yellow)
+        log "[SEAL] Peer #{peer[0]['id']} (head #{peer[0]['best']['hash']}) sealed INTURN block #{_best['number']}, diff #{_best['difficulty']}, hash #{_best['hash']}, parent #{_best['parent']}".colorize(:light_green)
 
       # if node is not in turn, seal out-of-turn block
       else
