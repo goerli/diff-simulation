@@ -7,7 +7,7 @@ requires **ruby 2.6** and the **colorize** gem: `gem install colorize`
 
 ### run 1 simulation
 
-run 1 chain simulation with `diff_inturn=2`, `diff_noturn=1`, `peer_count=8`, and `net_fragmentation=1`
+run 1 chain simulation with `diff_inturn=2`, `diff_noturn=1`, `peer_count=8`, and `net_fragmentation=0.001`
 
 ```bash
 ruby ./diff.rb 2 1 8 0.001 true
