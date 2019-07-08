@@ -205,12 +205,13 @@ def mine_chain(gen, peers)
 end
 
 # Sorry for overriding this here, lol - used for convenience in the bash script
-if ARGV.length === 3
+if ARGV.length >= 3
   @DIFF_INTURN = ARGV[0].to_i
   @DIFF_NOTURN = ARGV[1].to_i
   @PEER_COUNT = ARGV[2].to_i
   @NET_FRAG = ARGV[3].to_f
-elsif ARGV.length >= 4
+end
+if ARGV.length >= 4
   @DEBUG_MODE = ARGV[4].to_s.downcase == "true"
 end
 
