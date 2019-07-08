@@ -189,7 +189,7 @@ def mine_chain(gen, peers)
       peers.each do |peer|
         log "[SIML] Peer #{peer[0]['id']}, block #{peer[0]['best']['number']}, diff #{peer[0]['best']['difficulty']}, hash #{peer[0]['best']['hash']}, parent #{peer[0]['best']['parent']}".colorize(:light_red)
       end
-      log "[SIML] Network is stuck... Exiting.".colorize(:light_red)
+      log "[SIML] Network is stuck... Exciting.".colorize(:light_red)
 
       # exit simulation at block hight #{_num}
       return _num
