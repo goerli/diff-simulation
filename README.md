@@ -1,5 +1,5 @@
 # diff-simulation
-simulate diff_inturn and diff_noturn chains
+clique: simulate diff_inturn and diff_noturn chains, https://github.com/goerli/eips-poa/issues/13
 
 ### deps
 
